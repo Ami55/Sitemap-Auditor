@@ -1,0 +1,7 @@
+{
+  "name": "SemanticMapper",
+  "description": "Enterprise SEO auditing tool that discovers pages via internal crawling, parses XML sitemaps, and classifies taxonomy rules with deterministic priority mapping.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
