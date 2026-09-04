@@ -15,3 +15,6 @@ body{background:radial-gradient(circle at 90% 0,rgba(124,97,255,.12),transparent
 #audit-start-form input,#audit-start-form select{background:#fff;color:#151b2c}
 #audit-start-form .bg-white{background:#fff!important}
 @media(max-width:800px){#audit-start-page main{padding:4px 12px 32px!important}#audit-start-hero{border-radius:26px;padding:24px}#audit-start-form{border-radius:20px!important}}
+@keyframes audit-progress-sweep{0%{transform:translateX(-120%)}100%{transform:translateX(320%)}}
+.audit-progress-indeterminate{animation:audit-progress-sweep 1.25s ease-in-out infinite}
+@media(prefers-reduced-motion:reduce){.audit-progress-indeterminate{animation:pulse 2s ease-in-out infinite}}

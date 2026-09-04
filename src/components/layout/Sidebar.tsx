@@ -15,6 +15,7 @@ import {
   ExternalLink,
   Link2Off,
   CopyCheck,
+  GitCompareArrows,
 } from 'lucide-react';
 
 export type NavTab =
@@ -31,7 +32,8 @@ export type NavTab =
   | 'config'
   | 'recommendations'
   | 'exports'
-  | 'settings';
+  | 'settings'
+  | 'comparison';
 
 interface SidebarProps {
   activeTab: NavTab;
@@ -57,6 +59,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
       id: 'dashboard' as NavTab,
       label: 'Dashboard',
       icon: LayoutDashboard,
+      badge: null,
+    },
+    {
+      id: 'comparison' as NavTab,
+      label: 'Compare Audits',
+      icon: GitCompareArrows,
       badge: null,
     },
     {

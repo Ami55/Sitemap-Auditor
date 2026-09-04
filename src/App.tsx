@@ -17,6 +17,7 @@ import { RecommendationsView } from './components/recommendations/Recommendation
 import { CrawlConfigView } from './components/config/CrawlConfigView.js';
 import { ExportsView } from './components/exports/ExportsView.js';
 import { SettingsIntegrationsView } from './components/settings/SettingsIntegrationsView.js';
+import { AuditComparisonView } from './components/comparison/AuditComparisonView.js';
 import {
   AuditProject,
   AuditSummaryStats,
@@ -300,6 +301,10 @@ export function App() {
                   />
                 )}
 
+                {activeTab === 'comparison' && (
+                  <AuditComparisonView projects={projects} currentAuditId={currentProject.id} />
+                )}
+
                 {activeTab === 'sitemaps' && (
                   <SitemapExplorerView
                     sitemaps={sitemaps}
@@ -345,6 +350,7 @@ export function App() {
                   <SitemapProblemsView
                     auditId={currentProject.id}
                     issues={issues}
+                    onIssueReviewed={(updated) => setIssues((current) => current.map((issue) => issue.id === updated.id ? updated : issue))}
                     onGenerateTicket={(cat, count, ex, pt) => {
                       handleTriggerTicketForIssue(cat, count, ex, pt);
                     }}

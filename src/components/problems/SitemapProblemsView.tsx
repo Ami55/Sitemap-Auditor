@@ -22,18 +22,21 @@ interface SitemapProblemsViewProps {
   auditId: string;
   issues: IssueItem[];
   onGenerateTicket: (category: string, count: number, examples: string[], pageType: string) => void;
+  onIssueReviewed?: (issue: IssueItem) => void;
 }
 
 export const SitemapProblemsView: React.FC<SitemapProblemsViewProps> = ({
   auditId,
   issues,
   onGenerateTicket,
+  onIssueReviewed,
 }) => {
   const [activeTab, setActiveTab] = useState<string>('all');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [selectedIssue, setSelectedIssue] = useState<IssueItem | null>(null);
   const [reviewOverrides, setReviewOverrides] = useState<Record<string, IssueReviewStatus>>({});
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [reviewFilter, setReviewFilter] = useState<IssueReviewStatus | 'all'>('all');
 
   const updateReview = async (issue: IssueItem, reviewStatus: IssueReviewStatus) => {
     setSavingId(issue.id);
@@ -43,6 +46,7 @@ export const SitemapProblemsView: React.FC<SitemapProblemsViewProps> = ({
       });
       if (!response.ok) throw new Error('Could not save review');
       const updated: IssueItem = await response.json();
+      onIssueReviewed?.(updated);
       setReviewOverrides((current) => ({ ...current, [issue.id]: updated.reviewStatus || 'unreviewed' }));
       setSelectedIssue((current) => current?.id === issue.id ? { ...current, ...updated } : current);
     } finally {
@@ -97,6 +101,8 @@ export const SitemapProblemsView: React.FC<SitemapProblemsViewProps> = ({
   ];
 
   const filteredIssues = issues.filter((issue) => {
+    const effectiveReview = reviewOverrides[issue.id] || issue.reviewStatus || 'unreviewed';
+    if (reviewFilter !== 'all' && effectiveReview !== reviewFilter) return false;
     if (activeTab === 'all') return true;
     if (activeTab === 'redirects') return issue.type === 'sitemap_redirect';
     if (activeTab === 'broken') return issue.type === 'sitemap_broken';
@@ -135,6 +141,18 @@ export const SitemapProblemsView: React.FC<SitemapProblemsViewProps> = ({
         </div>
       </div>
 
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {[
+          ['Confirmed', 'confirmed', 'text-rose-700'],
+          ['False positives', 'false_positive', 'text-slate-700'],
+          ['Needs review', 'needs_review', 'text-amber-700'],
+          ['Fixed', 'fixed', 'text-emerald-700'],
+        ].map(([label, status, color]) => {
+          const count = issues.filter((issue) => (reviewOverrides[issue.id] || issue.reviewStatus) === status).length;
+          return <button key={status} onClick={() => setReviewFilter(reviewFilter === status ? 'all' : status as IssueReviewStatus)} className={`bg-white border rounded-xl p-3 text-left ${reviewFilter === status ? 'border-violet-500 ring-2 ring-violet-100' : 'border-slate-200'}`}><div className="text-[10px] uppercase font-bold text-slate-500">{label}</div><div className={`text-2xl font-extrabold mt-1 ${color}`}>{count}</div></button>;
+        })}
+      </div>
+
       {/* Categories Tabs */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 bg-white p-2 rounded-xl border border-slate-200 shadow-xs">
         {categories.map((cat) => (
@@ -157,6 +175,9 @@ export const SitemapProblemsView: React.FC<SitemapProblemsViewProps> = ({
             </span>
           </button>
         ))}
+        <select value={reviewFilter} onChange={(event) => setReviewFilter(event.target.value as IssueReviewStatus | 'all')} className="ml-auto px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-semibold bg-white whitespace-nowrap">
+          <option value="all">All review statuses</option><option value="unreviewed">Unreviewed</option><option value="confirmed">Confirmed</option><option value="false_positive">False positive</option><option value="needs_review">Needs review</option><option value="intentional_exclusion">Intentional exclusion</option><option value="fixed">Fixed</option>
+        </select>
       </div>
 
       {/* Problems List */}
