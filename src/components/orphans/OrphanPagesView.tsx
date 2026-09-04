@@ -114,10 +114,10 @@ export const OrphanPagesView: React.FC<OrphanPagesViewProps> = ({
         <div>
           <h2 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
             <Link2Off className="w-5 h-5 text-rose-600" />
-            <span>Orphan Pages & Link Equity Finder</span>
+            <span>URLs Not Discovered in Internal Crawl</span>
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Identify URLs submitted in XML sitemaps with <strong>0 internal inbound links</strong> that rely entirely on sitemap discovery and receive no internal PageRank.
+            Identify URLs submitted in XML sitemaps that were not discovered from the configured crawl sources. A partial crawl cannot prove that these URLs have zero internal links.
           </p>
         </div>
 
@@ -150,7 +150,7 @@ export const OrphanPagesView: React.FC<OrphanPagesViewProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white p-4 rounded-xl border border-rose-200 shadow-xs">
           <div className="flex items-center justify-between text-rose-600 text-xs font-bold uppercase tracking-wider mb-1">
-            <span>True Sitemap Orphans</span>
+            <span>Not Found in This Crawl</span>
             <Link2Off className="w-4 h-4" />
           </div>
           <div className="text-2xl font-black text-slate-900 font-mono">

@@ -1,6 +1,10 @@
 import { XMLParser } from 'fast-xml-parser';
 import { SitemapFileRecord, DiscoverySource, SitemapFileType } from '../src/types/audit.js';
 import { normalizeUrl, isSameHost } from './normalizer.js';
+import { gunzipSync } from 'node:zlib';
+
+const MAX_SITEMAP_BYTES = 50 * 1024 * 1024;
+const MAX_COMPRESSED_BYTES = 20 * 1024 * 1024;
 
 export interface ParsedSitemapResult {
   sitemapFiles: Map<string, SitemapFileRecord>;
@@ -269,12 +273,31 @@ export class SitemapDiscoveryEngine {
       }
 
       const contentType = resp.headers.get('content-type') || '';
-      const text = await resp.text();
+      const compressed = Buffer.from(await resp.arrayBuffer());
+      if (compressed.byteLength > MAX_COMPRESSED_BYTES) {
+        fileRecord.type = 'invalid_xml';
+        fileRecord.errors.push('Compressed sitemap response exceeds the 20MB safety limit');
+        return fileRecord;
+      }
+      const isGzip = compressed.length >= 2 && compressed[0] === 0x1f && compressed[1] === 0x8b;
+      let body = compressed;
+      if (isGzip) {
+        try {
+          body = gunzipSync(compressed, { maxOutputLength: MAX_SITEMAP_BYTES + 1 });
+        } catch (error: any) {
+          fileRecord.type = 'invalid_xml';
+          fileRecord.errors.push(`Unable to decompress gzip sitemap: ${error.message}`);
+          return fileRecord;
+        }
+      }
+      const text = body.toString('utf8');
       fileRecord.fileSizeBytes = Buffer.byteLength(text, 'utf8');
 
       // Check for size limits (50MB / 50k URLs)
-      if (fileRecord.fileSizeBytes > 50 * 1024 * 1024) {
-        fileRecord.warnings.push('Sitemap file exceeds standard 50MB uncompressed limit');
+      if (fileRecord.fileSizeBytes > MAX_SITEMAP_BYTES) {
+        fileRecord.errors.push('Sitemap file exceeds the 50MB uncompressed limit');
+        fileRecord.type = 'invalid_xml';
+        return fileRecord;
       }
 
       // Check if returned HTML instead of XML

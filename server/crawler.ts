@@ -1,6 +1,7 @@
 import * as cheerio from 'cheerio';
 import { CrawledUrlRecord, CrawlConfig, CanonicalStatus, DiscoverySource } from '../src/types/audit.js';
 import { normalizeUrl, isSameHost } from './normalizer.js';
+import { RobotsPolicy } from './robotsPolicy.js';
 
 export interface CrawlProgressCallback {
   (progress: {
@@ -16,7 +17,7 @@ export class PoliteCrawler {
   private baseHost: string;
   private origin: string;
   private config: CrawlConfig;
-  private disallowedRobotsPaths: string[] = [];
+  private robotsPolicy?: RobotsPolicy;
   private visitedUrls: Map<string, CrawledUrlRecord> = new Map();
   private queue: { url: string; depth: number; discoveredFrom?: string; source: DiscoverySource }[] = [];
   private enqueuedSet: Set<string> = new Set();
@@ -33,13 +34,13 @@ export class PoliteCrawler {
     'xml', 'rss', 'atom', 'json'
   ]);
 
-  constructor(homepageUrl: string, config: CrawlConfig, disallowedRobotsPaths: string[] = []) {
+  constructor(homepageUrl: string, config: CrawlConfig, robotsContent: string = '') {
     const norm = normalizeUrl(homepageUrl);
     const parsed = new URL(norm);
     this.origin = `${parsed.protocol}//${parsed.host}`;
     this.baseHost = parsed.hostname;
     this.config = config;
-    this.disallowedRobotsPaths = disallowedRobotsPaths;
+    this.robotsPolicy = robotsContent ? new RobotsPolicy(robotsContent, config.userAgent) : undefined;
 
     // Seed queue with homepage
     this.enqueue(norm, 0, undefined, 'internal_crawl');
@@ -110,13 +111,8 @@ export class PoliteCrawler {
         }
       }
 
-      // Check robots.txt disallow if respectRobotsTxt is on
-      if (this.config.respectRobotsTxt) {
-        for (const disallowed of this.disallowedRobotsPaths) {
-          if (disallowed && pathname.startsWith(disallowed.toLowerCase())) {
-            return true;
-          }
-        }
+      if (this.config.respectRobotsTxt && this.robotsPolicy && !this.robotsPolicy.isAllowed(urlStr)) {
+        return true;
       }
 
       // Crawl trap heuristics (repeating segments: /a/b/a/b/)
@@ -142,9 +138,10 @@ export class PoliteCrawler {
    * Run the crawl loop
    */
   async runCrawl(onProgress?: CrawlProgressCallback): Promise<Map<string, CrawledUrlRecord>> {
-    const delayMs =
-      this.config.crawlSpeed === 'conservative' ? 300 :
-      this.config.crawlSpeed === 'moderate' ? 120 : 40;
+    const delayMs = this.config.crawlSpeed === 'conservative' ? 250 : this.config.crawlSpeed === 'moderate' ? 100 : 20;
+    const concurrency = Math.max(1, Math.min(this.config.concurrency || (
+      this.config.crawlSpeed === 'conservative' ? 2 : this.config.crawlSpeed === 'moderate' ? 5 : 12
+    ), 25));
 
     let processedCount = 0;
     const depthDistribution: Record<number, number> = {};
@@ -155,35 +152,27 @@ export class PoliteCrawler {
         continue;
       }
 
-      const item = this.queue.shift();
-      if (!item) break;
+      const remaining = this.config.maxUrls - processedCount;
+      const batch = this.queue.splice(0, Math.min(concurrency, remaining));
+      if (batch.length === 0) break;
+      const results = await Promise.all(batch.map(async (item) => ({
+        item,
+        norm: normalizeUrl(item.url),
+        record: await this.inspectPage(item.url, item.depth, item.discoveredFrom, item.source),
+      })));
 
-      const norm = normalizeUrl(item.url);
-      if (this.visitedUrls.has(norm)) {
-        continue;
-      }
-
-      processedCount++;
-      depthDistribution[item.depth] = (depthDistribution[item.depth] || 0) + 1;
-
-      if (onProgress && processedCount % 5 === 0) {
-        onProgress({
-          currentUrl: norm,
-          urlsProcessed: processedCount,
-          urlsQueued: this.queue.length,
-          depthDistribution,
-          statusText: `Crawling [${processedCount}/${this.enqueuedSet.size}]: ${norm.substring(0, 60)}...`,
-        });
-      }
-
-      const record = await this.inspectPage(item.url, item.depth, item.discoveredFrom, item.source);
-      record.inboundInternalLinksCount = this.inboundLinksCount.get(norm) || 1;
-      this.visitedUrls.set(norm, record);
-
-      // Extract internal links from 200 HTML responses
-      if (record.httpStatus === 200 && record.contentType.includes('text/html') && record.extractedLinks) {
-        for (const extracted of record.extractedLinks) {
-          this.enqueue(extracted.url, item.depth + 1, norm, extracted.source);
+      for (const { item, norm, record } of results) {
+        if (this.visitedUrls.has(norm)) continue;
+        processedCount++;
+        depthDistribution[item.depth] = (depthDistribution[item.depth] || 0) + 1;
+        record.inboundInternalLinksCount = this.inboundLinksCount.get(norm) || 1;
+        this.visitedUrls.set(norm, record);
+        if (record.httpStatus === 200 && record.contentType.includes('text/html') && record.extractedLinks) {
+          for (const extracted of record.extractedLinks) this.enqueue(extracted.url, item.depth + 1, norm, extracted.source);
+        }
+        if (onProgress && (processedCount % 5 === 0 || processedCount === this.config.maxUrls)) {
+          onProgress({ currentUrl: norm, urlsProcessed: processedCount, urlsQueued: this.queue.length, depthDistribution,
+            statusText: `Crawling [${processedCount}/${this.enqueuedSet.size}]: ${norm.substring(0, 60)}...` });
         }
       }
 
@@ -206,6 +195,18 @@ export class PoliteCrawler {
 
   stop() {
     this.isStopped = true;
+  }
+
+  getCompletionSummary() {
+    const failedUrls = Array.from(this.visitedUrls.values()).filter((record) => record.httpStatus === 0).length;
+    return {
+      processedUrls: this.visitedUrls.size,
+      queuedUrlsRemaining: this.queue.length,
+      failedUrls,
+      stopped: this.isStopped,
+      reachedLimit: this.visitedUrls.size >= this.config.maxUrls && this.queue.length > 0,
+      complete: !this.isStopped && this.queue.length === 0,
+    };
   }
 
   /**
@@ -247,26 +248,37 @@ export class PoliteCrawler {
       lastCheckedDate: new Date().toISOString(),
       isPotentiallyMissing: false,
       priority: 'medium',
+      technicalEligibility: 'unchecked',
+      evidence: [],
+      evidenceConfidence: 'low',
     };
 
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000);
-
-      const resp = await fetch(targetUrl, {
-        headers: {
-          'User-Agent': this.config.userAgent,
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        },
-        signal: controller.signal,
-        redirect: 'follow',
-      });
-      clearTimeout(timeoutId);
+      let resp: Response | undefined;
+      let lastError: unknown;
+      for (let attempt = 0; attempt <= this.config.retryCount; attempt++) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+        try {
+          resp = await fetch(targetUrl, { headers: { 'User-Agent': this.config.userAgent, 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8' }, signal: controller.signal, redirect: 'follow' });
+          clearTimeout(timeoutId);
+          if (resp.status !== 429 && resp.status < 500) break;
+        } catch (error) {
+          clearTimeout(timeoutId);
+          lastError = error;
+        }
+        if (attempt < this.config.retryCount) await new Promise((resolve) => setTimeout(resolve, 200 * 2 ** attempt));
+      }
+      if (!resp) throw lastError || new Error('Request failed');
 
       record.httpStatus = resp.status;
       record.finalUrl = normalizeUrl(resp.url || targetUrl);
       record.contentType = (resp.headers.get('content-type') || '').toLowerCase();
       record.xRobotsTag = resp.headers.get('x-robots-tag') || '';
+      record.evidence = [
+        { check: 'http_status', value: record.httpStatus, source: 'http_response' },
+        { check: 'content_type', value: record.contentType, source: 'http_response' },
+      ];
 
       if (record.finalUrl !== norm) {
         redirectChain.push(norm, record.finalUrl);
@@ -274,10 +286,16 @@ export class PoliteCrawler {
       }
 
       if (!resp.ok) {
+        record.technicalEligibility = 'ineligible';
+        record.eligibilityReason = `HTTP ${record.httpStatus} response.`;
+        record.evidenceConfidence = 'high';
         return record;
       }
 
       if (!record.contentType.includes('text/html')) {
+        record.technicalEligibility = 'ineligible';
+        record.eligibilityReason = `Non-HTML content type: ${record.contentType || 'unknown'}.`;
+        record.evidenceConfidence = 'high';
         return record;
       }
 
@@ -290,10 +308,14 @@ export class PoliteCrawler {
       // Meta robots
       const metaRobots = $('meta[name="robots" i]').attr('content') || $('meta[name="googlebot" i]').attr('content') || '';
       record.metaRobots = metaRobots.toLowerCase();
+      record.evidence.push({ check: 'meta_robots', value: record.metaRobots || 'not_declared', source: 'html' });
 
       // Canonical tag
-      const canonicalTag = $('link[rel="canonical" i]').attr('href');
-      if (canonicalTag) {
+      const canonicalTags = $('link[rel="canonical" i]');
+      const canonicalTag = canonicalTags.first().attr('href');
+      if (canonicalTags.length > 1) {
+        record.canonicalStatus = 'multiple_found';
+      } else if (canonicalTag) {
         try {
           const resolvedCanonical = new URL(canonicalTag, record.finalUrl).href;
           record.canonicalUrl = normalizeUrl(resolvedCanonical);
@@ -318,8 +340,22 @@ export class PoliteCrawler {
         record.httpStatus === 200 &&
         !hasNoindex &&
         !record.isRobotsBlocked &&
-        record.contentType.includes('text/html') &&
-        (record.canonicalStatus === 'self_referencing' || record.canonicalStatus === 'missing');
+        record.contentType.includes('text/html');
+      record.evidence.push({ check: 'canonical_status', value: record.canonicalStatus, source: 'html' });
+      record.evidence.push({ check: 'noindex', value: hasNoindex, source: 'rule_engine' });
+      if (!record.isIndexable || record.canonicalStatus === 'points_to_other_internal' || record.canonicalStatus === 'points_to_external') {
+        record.technicalEligibility = 'ineligible';
+        record.eligibilityReason = !record.isIndexable ? 'Failed HTTP, HTML, robots, or noindex checks.' : 'Canonical points to another URL.';
+        record.evidenceConfidence = 'high';
+      } else if (record.canonicalStatus === 'missing' || record.canonicalStatus === 'review_required' || record.canonicalStatus === 'multiple_found') {
+        record.technicalEligibility = 'review';
+        record.eligibilityReason = 'Canonical declaration is missing or ambiguous.';
+        record.evidenceConfidence = 'medium';
+      } else {
+        record.technicalEligibility = 'eligible';
+        record.eligibilityReason = 'Passed HTTP, HTML, noindex, robots, and self-canonical checks.';
+        record.evidenceConfidence = 'high';
+      }
 
       // Extract links
       const extractedLinks: { url: string; source: DiscoverySource }[] = [];
@@ -390,6 +426,9 @@ export class PoliteCrawler {
     } catch (err: any) {
       record.httpStatus = 0;
       record.isIndexable = false;
+      record.technicalEligibility = 'unchecked';
+      record.eligibilityReason = `Fetch failed: ${err?.name === 'AbortError' ? 'timeout' : 'request error'}.`;
+      record.evidenceConfidence = 'low';
       return record;
     }
   }

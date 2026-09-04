@@ -92,6 +92,7 @@ export class AuditStore {
         ...(params.additionalSitemaps || []),
       ],
       retryCount: params.config?.retryCount || 2,
+      concurrency: params.config?.concurrency,
     };
 
     const project: AuditProject = {
@@ -102,6 +103,12 @@ export class AuditStore {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       isDemo: Boolean(params.isDemo),
+      dataProvenance: {
+        sourceLabel: 'Live HTTP crawl and parsed sitemap responses',
+        scope: 'live_crawl',
+        recordsComplete: false,
+        note: 'Audit is queued. Completeness will be determined when crawling finishes.',
+      },
       status: 'pending',
       crawlConfig,
       stats: {
@@ -203,21 +210,12 @@ export class AuditStore {
 
     // 2. Fetch robots.txt disallowed paths for crawler
     const robotsResult = await sitemapEngine.fetchRobotsTxtSitemaps(session.project.homepageUrl);
-    const disallowedPaths: string[] = [];
-    if (robotsResult.robotsContent) {
-      for (const line of robotsResult.robotsContent.split('\n')) {
-        if (/^disallow:\s*/i.test(line.trim())) {
-          disallowedPaths.push(line.trim().replace(/^disallow:\s*/i, '').trim());
-        }
-      }
-    }
-
     // 3. Run Internal Crawler
     session.project.status = 'crawling';
     const crawler = new PoliteCrawler(
       session.project.homepageUrl,
       session.project.crawlConfig,
-      disallowedPaths
+      robotsResult.robotsContent
     );
     session.crawlerInstance = crawler;
 
@@ -234,6 +232,16 @@ export class AuditStore {
     });
 
     session.crawledUrls = crawledMap;
+    const completion = crawler.getCompletionSummary();
+    session.project.stats.totalDiscoveredInternalUrls = crawledMap.size;
+    session.project.dataProvenance = {
+      sourceLabel: 'Live HTTP crawl and parsed sitemap responses',
+      scope: 'live_crawl',
+      recordsComplete: completion.complete,
+      note: completion.complete
+        ? `Completed crawl: ${completion.processedUrls} URLs checked; ${completion.failedUrls} fetch failures.`
+        : `Partial crawl: ${completion.processedUrls} URLs checked; ${completion.queuedUrlsRemaining} remained queued; ${completion.failedUrls} fetch failures.`,
+    };
 
     // 4. Run Deterministic Analysis & Issue Classification
     session.project.status = 'analyzing';
@@ -695,7 +703,7 @@ export class AuditStore {
       inSitemap,
       httpStatus: crawled ? crawled.httpStatus : inSitemap ? 200 : 0,
       isIndexable: crawled ? crawled.isIndexable : true,
-      hasValidCanonical: crawled ? crawled.canonicalStatus === 'self_referencing' || crawled.canonicalStatus === 'missing' : true,
+      hasValidCanonical: crawled ? crawled.canonicalStatus === 'self_referencing' : false,
       isRedirecting: Boolean(crawled && (crawled.httpStatus === 301 || crawled.httpStatus === 302)),
       isBlocked: Boolean(crawled?.isRobotsBlocked),
       foundUrl: norm,

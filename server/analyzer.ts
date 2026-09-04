@@ -120,7 +120,7 @@ export class AuditAnalyzer {
         updated.contentType.includes('text/html') &&
         updated.isIndexable &&
         !updated.isRobotsBlocked &&
-        (updated.canonicalStatus === 'self_referencing' || updated.canonicalStatus === 'missing');
+        updated.canonicalStatus === 'self_referencing';
 
       if (isCandidateForSitemap && !inSitemap) {
         updated.isPotentiallyMissing = true;
@@ -144,8 +144,29 @@ export class AuditAnalyzer {
           description: `URL (${updated.slug}) is live (200 OK), internally linked (${updated.inboundInternalLinksCount} links), and indexable, but is omitted from ${updated.suggestedSitemap}.`,
           affectedUrl: normUrl,
           affectedSitemap: updated.suggestedSitemap,
-          suggestedAction: `Add to ${updated.suggestedSitemap} with appropriate changefreq and priority.`,
+          suggestedAction: `Confirm this page family is approved for indexation, then add the preferred canonical URL to ${updated.suggestedSitemap}.`,
           pageType: updated.pageType,
+          ruleId: 'SM-INCLUSION-001',
+          evidence: updated.evidence,
+          confidence: updated.evidenceConfidence || 'high',
+          observedAt: updated.lastCheckedDate,
+        });
+      } else if (!inSitemap && updated.httpStatus === 200 && updated.isIndexable && updated.canonicalStatus === 'missing') {
+        updated.technicalEligibility = 'review';
+        updated.eligibilityReason = 'Missing canonical must be reviewed before sitemap inclusion.';
+        issues.push({
+          id: 'issue-' + Math.random().toString(36).substring(2, 9),
+          type: 'canonical_mismatch',
+          severity: 'review',
+          title: 'Sitemap eligibility review: canonical missing',
+          description: 'The URL is crawlable and does not declare noindex, but no canonical was found. It is not counted as a sitemap inclusion candidate.',
+          affectedUrl: normUrl,
+          suggestedAction: 'Confirm the preferred URL and add a self-referencing canonical before considering sitemap inclusion.',
+          pageType: updated.pageType,
+          ruleId: 'SM-CANONICAL-REVIEW-001',
+          evidence: updated.evidence,
+          confidence: 'medium',
+          observedAt: updated.lastCheckedDate,
         });
       } else if (inSitemap && isCandidateForSitemap) {
         validSitemapUrlsCount++;
@@ -284,7 +305,7 @@ export class AuditAnalyzer {
       const matchingUrls = Array.from(classifiedUrls.values()).filter((u) => u.pageType === rule.name);
 
       const discoveredValidUrls = matchingUrls.filter(
-        (u) => u.httpStatus === 200 && u.isIndexable && (u.canonicalStatus === 'self_referencing' || u.canonicalStatus === 'missing')
+        (u) => u.httpStatus === 200 && u.isIndexable && u.canonicalStatus === 'self_referencing'
       ).length;
 
       const inSitemapCount = matchingUrls.filter((u) => u.inSitemap).length;
@@ -294,7 +315,7 @@ export class AuditAnalyzer {
 
       // Formula: Valid discovered canonical URLs found in sitemap ÷ All valid discovered canonical URLs × 100
       const validFoundInSitemap = matchingUrls.filter(
-        (u) => u.inSitemap && u.httpStatus === 200 && u.isIndexable && (u.canonicalStatus === 'self_referencing' || u.canonicalStatus === 'missing')
+        (u) => u.inSitemap && u.httpStatus === 200 && u.isIndexable && u.canonicalStatus === 'self_referencing'
       ).length;
 
       const coveragePercentage = discoveredValidUrls > 0 ? Math.round((validFoundInSitemap / discoveredValidUrls) * 100) : 100;
@@ -306,7 +327,7 @@ export class AuditAnalyzer {
 
       let recommendedAction = 'Maintain sitemap generator synchronization.';
       if (potentiallyMissing > 0) {
-        recommendedAction = `Inspect generator query for ${rule.name}; include missing ${potentiallyMissing} live pages in ${rule.expectedSitemap}.`;
+        recommendedAction = `Review ${potentiallyMissing} eligible ${rule.name} candidates against the approved page-family policy before adding canonical URLs to ${rule.expectedSitemap}.`;
       }
 
       return {
@@ -339,7 +360,7 @@ export class AuditAnalyzer {
         inSitemap,
         httpStatus: crawled ? crawled.httpStatus : inSitemap ? 200 : 0,
         isIndexable: crawled ? crawled.isIndexable : inSitemap,
-        hasValidCanonical: crawled ? crawled.canonicalStatus === 'self_referencing' || crawled.canonicalStatus === 'missing' : true,
+        hasValidCanonical: crawled ? crawled.canonicalStatus === 'self_referencing' : false,
         isRedirecting: Boolean(crawled && (crawled.httpStatus === 301 || crawled.httpStatus === 302)),
         isBlocked: Boolean(crawled?.isRobotsBlocked),
         foundUrl: norm,
@@ -364,11 +385,11 @@ export class AuditAnalyzer {
 
     // 8. Overall Summary Stats Calculation
     const validDiscoveredTotal = Array.from(classifiedUrls.values()).filter(
-      (u) => u.httpStatus === 200 && u.isIndexable && (u.canonicalStatus === 'self_referencing' || u.canonicalStatus === 'missing')
+      (u) => u.httpStatus === 200 && u.isIndexable && u.canonicalStatus === 'self_referencing'
     ).length;
 
     const validDiscoveredInSitemapTotal = Array.from(classifiedUrls.values()).filter(
-      (u) => u.inSitemap && u.httpStatus === 200 && u.isIndexable && (u.canonicalStatus === 'self_referencing' || u.canonicalStatus === 'missing')
+      (u) => u.inSitemap && u.httpStatus === 200 && u.isIndexable && u.canonicalStatus === 'self_referencing'
     ).length;
 
     const sitemapCoveragePercentage = validDiscoveredTotal > 0 ? Math.round((validDiscoveredInSitemapTotal / validDiscoveredTotal) * 100) : 100;

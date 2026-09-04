@@ -79,7 +79,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   // Pie chart data for Sitemap composition
   const sitemapCompositionData = [
     { name: 'Valid in Sitemap', value: stats.validSitemapUrlsCount, color: '#10b981' },
-    { name: 'Missing from Sitemap', value: stats.potentiallyMissingUrlsCount, color: '#f43f5e' },
+    { name: 'Sitemap Inclusion Candidates', value: stats.potentiallyMissingUrlsCount, color: '#f43f5e' },
     { name: 'Invalid/Redirect in Sitemap', value: stats.invalidSitemapUrlsCount, color: '#f59e0b' },
     { name: 'Orphan in Sitemap (No in-links)', value: stats.orphanInSitemapCount, color: '#6366f1' },
   ];
@@ -95,7 +95,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </h2>
             {project.isDemo && (
               <span className="text-xs font-semibold px-2 py-0.5 bg-amber-100 text-amber-900 border border-amber-300 rounded-md">
-                Demo Dataset
+                Illustrative Dataset — Not Live
               </span>
             )}
           </div>
@@ -120,6 +120,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <span>AI Action Plan</span>
           </button>
         </div>
+      </div>
+
+      <div className={`p-3.5 rounded-xl border text-xs flex flex-col md:flex-row md:items-center justify-between gap-2 ${
+        project.dataProvenance?.recordsComplete
+          ? 'bg-emerald-50 border-emerald-200 text-emerald-950'
+          : 'bg-amber-50 border-amber-200 text-amber-950'
+      }`}>
+        <div>
+          <span className="font-bold">Data source: </span>
+          <span>{project.dataProvenance?.sourceLabel || 'Audit records'}</span>
+          <span className="mx-2">•</span>
+          <span className="font-bold">Coverage: </span>
+          <span>{project.dataProvenance?.recordsComplete ? 'Complete for configured scope' : 'Partial or illustrative'}</span>
+        </div>
+        <span className="text-[11px]">{project.dataProvenance?.note}</span>
       </div>
 
       {/* Main KPI Cards Grid */}
@@ -167,7 +182,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           className="bg-white p-5 rounded-xl border border-rose-200 shadow-xs flex flex-col justify-between hover:border-rose-300 transition-all cursor-pointer group"
         >
           <div className="flex items-center justify-between text-rose-800 text-xs font-semibold uppercase tracking-wider">
-            <span>Potentially Missing URLs</span>
+            <span>Sitemap Inclusion Candidates</span>
             <FileQuestion className="w-4 h-4 text-rose-600 group-hover:scale-110 transition-transform" />
           </div>
 
@@ -176,7 +191,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               {stats.potentiallyMissingUrlsCount.toLocaleString()}
             </span>
             <p className="text-xs text-rose-950 mt-1">
-              Live indexable 200 OK pages omitted from all XML sitemaps.
+              URLs classified as technically eligible candidates, pending page-family policy review.
             </p>
           </div>
 
@@ -251,7 +266,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <Layers className="w-4 h-4 text-amber-600" />
               <span>Multi-Sitemap Duplicate URLs</span>
               <span className="px-2 py-0.5 bg-amber-200/80 text-amber-900 text-[10px] font-mono rounded-full font-bold">
-                {stats.duplicateAcrossSitemapsCount || 13} Found
+                {stats.duplicateAcrossSitemapsCount.toLocaleString()} Found
               </span>
             </div>
             <p className="text-xs text-amber-950 pr-4">
@@ -272,13 +287,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-rose-900 text-xs font-bold uppercase tracking-wider">
               <Link2Off className="w-4 h-4 text-rose-600" />
-              <span>Orphan Pages (0 Inbound Internal Links)</span>
+              <span>Not Discovered in Internal Crawl</span>
               <span className="px-2 py-0.5 bg-rose-200/80 text-rose-900 text-[10px] font-mono rounded-full font-bold">
-                {stats.orphanInSitemapCount || 8} Detected
+                {stats.orphanInSitemapCount.toLocaleString()} Detected
               </span>
             </div>
             <p className="text-xs text-rose-950 pr-4">
-              Submitted in XML sitemaps but have <strong>0 internal inlinks</strong> from menus, footers, or hubs, receiving zero internal PageRank.
+              Submitted in XML sitemaps but not discovered from the configured crawl sources. This does not prove that no internal links exist.
             </p>
             <div className="text-[11px] font-bold text-rose-800 flex items-center gap-1 group-hover:underline pt-1">
               <span>Find orphan pages and plan link placement</span>

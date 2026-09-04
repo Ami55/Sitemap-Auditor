@@ -1715,22 +1715,35 @@ export function createDemoAuditDataset(): {
   // ==========================================
   // 8. AUDIT PROJECT METADATA
   // ==========================================
+  const aggregateDiscovered = pageTypeCoverage.reduce((sum, row) => sum + row.discoveredValidUrls, 0);
+  const aggregateInSitemaps = pageTypeCoverage.reduce((sum, row) => sum + row.validSitemapUrlsCount, 0);
+  const aggregateMissing = pageTypeCoverage.reduce((sum, row) => sum + row.potentiallyMissingCount, 0);
+  const aggregateCoverage = aggregateDiscovered > 0
+    ? Math.round((aggregateInSitemaps / aggregateDiscovered) * 100)
+    : 100;
+
   const project: AuditProject = {
     id: 'audit-enterprise-demo',
-    name: 'Enterprise Sitemap Architecture & Taxonomy Audit',
+    name: 'Illustrative Enterprise Sitemap Audit',
     domain: baseDomain,
     homepageUrl,
     createdAt: '2026-08-17T12:00:00Z',
     updatedAt: '2026-08-17T14:30:00Z',
-    isDemo: false,
+    isDemo: true,
+    dataProvenance: {
+      sourceLabel: 'Bundled illustrative dataset',
+      scope: 'illustrative_sample',
+      recordsComplete: false,
+      note: 'Aggregate figures and example URL records are provided to demonstrate the interface. They are not the output of a live crawl or a connected Search Console property.',
+    },
     status: 'completed',
     stats: {
-      totalDiscoveredInternalUrls: 198420,
+      totalDiscoveredInternalUrls: aggregateDiscovered,
       totalProcessedSitemapUrls: 147804,
-      potentiallyMissingUrlsCount: 40682,
-      validSitemapUrlsCount: 147804,
+      potentiallyMissingUrlsCount: aggregateMissing,
+      validSitemapUrlsCount: aggregateInSitemaps,
       invalidSitemapUrlsCount: 2,
-      sitemapCoveragePercentage: 74,
+      sitemapCoveragePercentage: aggregateCoverage,
       criticalIssuesCount: 4,
       highPriorityCount: 2,
       mediumPriorityCount: 7,
@@ -1739,8 +1752,8 @@ export function createDemoAuditDataset(): {
       canonicalMismatchCount: 0,
       sitemapRedirectCount: 0,
       sitemapBrokenCount: 2,
-      unreferencedSitemapsCount: 8,
-      duplicateAcrossSitemapsCount: 96328,
+      unreferencedSitemapsCount: patternCandidates.length,
+      duplicateAcrossSitemapsCount: duplicateUrlsAcrossSitemaps.length,
       totalSitemapFiles: sitemapFiles.size,
     },
     crawlConfig: {
@@ -1755,6 +1768,7 @@ export function createDemoAuditDataset(): {
       excludeFileExtensions: ['.jpg', '.png', '.gif', '.pdf', '.svg', '.webp'],
       customSitemapUrls: [`${homepageUrl}/sitemap_index.xml`],
       retryCount: 3,
+      concurrency: 5,
     },
     recommendation,
     tickets,

@@ -109,7 +109,7 @@ export const HowItWorksView: React.FC<HowItWorksViewProps> = ({ onNavigateToTab 
               </div>
               <h3 className="text-sm font-bold text-slate-900 mb-1">XML Sitemap Parsing</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Fetches sitemap indexes, uncompresses .xml/.gz files, validates parent-child relationships, detects nested index schema errors, and checks for GSC submission anomalies.
+                Fetches and parses XML sitemap indexes, records parent-child relationships, and reports XML and HTTP-level problems. Gzip and Search Console evidence require separate supported inputs.
               </p>
             </div>
 
@@ -143,7 +143,7 @@ export const HowItWorksView: React.FC<HowItWorksViewProps> = ({ onNavigateToTab 
               <div className="p-3.5 bg-slate-50 rounded-lg border border-slate-200">
                 <span className="font-bold text-slate-900 block mb-1">B. Indexability Gate</span>
                 <p className="text-slate-600 text-[11px]">
-                  Requires HTTP 200, noindex=false, robots.txt=allowed, and self-referencing canonical tag.
+                  Requires HTTP 200, HTML, no noindex directive, robots.txt access, and a self-referencing canonical. Missing canonicals require review.
                 </p>
               </div>
 

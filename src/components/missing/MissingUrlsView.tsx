@@ -98,10 +98,10 @@ export const MissingUrlsView: React.FC<MissingUrlsViewProps> = ({
         <div>
           <h2 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
             <FileQuestion className="w-5 h-5 text-rose-600" />
-            <span>Potentially Missing from Sitemaps</span>
+            <span>Sitemap Inclusion Candidates</span>
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Valid, live indexable pages discovered during internal crawling that are absent from all XML sitemaps.
+            URLs discovered in this crawl that passed the current technical checks and were absent from parsed XML sitemaps. Confirm page-family policy before adding them.
           </p>
         </div>
 
@@ -421,6 +421,26 @@ export const MissingUrlsView: React.FC<MissingUrlsViewProps> = ({
                   {inspectRecord.missingReason ||
                     'Discovered valid canonical URL via internal crawl, not found in any parsed sitemap.'}
                 </p>
+              </div>
+
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-950 space-y-2">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-bold">Eligibility decision</span>
+                  <span className="uppercase text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 border border-blue-200">
+                    {inspectRecord.evidenceConfidence || 'unknown'} confidence
+                  </span>
+                </div>
+                <p className="text-[11px]">{inspectRecord.eligibilityReason || 'Legacy/sample record; structured eligibility evidence is unavailable.'}</p>
+                {inspectRecord.evidence && inspectRecord.evidence.length > 0 && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                    {inspectRecord.evidence.map((item, index) => (
+                      <div key={`${item.check}-${index}`} className="bg-white/70 border border-blue-100 rounded px-2 py-1 text-[10px]">
+                        <span className="font-mono font-semibold">{item.check}</span>: {String(item.value)}
+                        <span className="text-blue-600 ml-1">({item.source})</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-3 pt-1">

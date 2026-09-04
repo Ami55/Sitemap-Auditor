@@ -49,8 +49,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   missingCount,
   problemsCount,
   criticalIssuesCount,
-  duplicateCount = 13,
-  orphanCount = 8,
+  duplicateCount = 0,
+  orphanCount = 0,
 }) => {
   const navItems = [
     {
@@ -74,14 +74,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
     },
     {
       id: 'orphans' as NavTab,
-      label: 'Orphan Pages Finder',
+      label: 'Not Found in Crawl',
       icon: Link2Off,
       badge: orphanCount > 0 ? `${orphanCount}` : null,
       badgeColor: 'bg-rose-100 text-rose-800 border-rose-300',
     },
     {
       id: 'missing' as NavTab,
-      label: 'Missing from Sitemap',
+      label: 'Sitemap Candidates',
       icon: FileQuestion,
       badge: missingCount > 0 ? missingCount.toLocaleString() : null,
       badgeColor: 'bg-rose-100 text-rose-800 border-rose-200',

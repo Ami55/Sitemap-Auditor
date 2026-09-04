@@ -3,6 +3,7 @@ import { LimitationBanner } from './components/common/LimitationBanner.js';
 import { Header } from './components/layout/Header.js';
 import { Sidebar, NavTab } from './components/layout/Sidebar.js';
 import { NewAuditModal } from './components/audit/NewAuditModal.js';
+import { StartAuditView, CreateAuditParams } from './components/audit/StartAuditView.js';
 import { DashboardView } from './components/dashboard/DashboardView.js';
 import { SitemapExplorerView } from './components/sitemaps/SitemapExplorerView.js';
 import { MissingUrlsView } from './components/missing/MissingUrlsView.js';
@@ -35,6 +36,9 @@ export function App() {
   const [activeTab, setActiveTab] = useState<NavTab>('dashboard');
   const [isNewAuditModalOpen, setIsNewAuditModalOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [hasEnteredWorkspace, setHasEnteredWorkspace] = useState(false);
+  const [isCreatingAudit, setIsCreatingAudit] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
 
   // Loaded audit detail states
   const [stats, setStats] = useState<AuditSummaryStats | null>(null);
@@ -54,9 +58,6 @@ export function App() {
       if (res.ok) {
         const data: AuditProject[] = await res.json();
         setProjects(data);
-        if (data.length > 0 && !currentProject) {
-          setCurrentProject(data[0]);
-        }
       }
     } catch (e) {
       console.error('Error fetching projects:', e);
@@ -141,10 +142,15 @@ export function App() {
   // Actions
   const handleSelectProject = (id: string) => {
     const p = projects.find((x) => x.id === id);
-    if (p) setCurrentProject(p);
+    if (p) {
+      setCurrentProject(p);
+      setHasEnteredWorkspace(true);
+    }
   };
 
-  const handleCreateAudit = async (params: any) => {
+  const handleCreateAudit = async (params: CreateAuditParams): Promise<boolean> => {
+    setIsCreatingAudit(true);
+    setCreateError(null);
     try {
       const res = await fetch('/api/audits', {
         method: 'POST',
@@ -156,11 +162,46 @@ export function App() {
         setProjects((prev) => [newProject, ...prev]);
         setCurrentProject(newProject);
         setActiveTab('dashboard');
+        setHasEnteredWorkspace(true);
+        setIsNewAuditModalOpen(false);
+        return true;
       }
+      const body = await res.json().catch(() => null);
+      setCreateError(body?.error || `Could not start the audit (HTTP ${res.status}).`);
     } catch (e) {
       console.error('Failed to create audit:', e);
+      setCreateError('Could not connect to the audit service. Please try again.');
+    } finally {
+      setIsCreatingAudit(false);
     }
+    return false;
   };
+
+  const handleOpenDemo = () => {
+    const demo = projects.find((project) => project.isDemo);
+    if (!demo) {
+      setCreateError('The illustrative demo dataset is not available.');
+      return;
+    }
+    setCurrentProject(demo);
+    setActiveTab('dashboard');
+    setHasEnteredWorkspace(true);
+    setIsNewAuditModalOpen(false);
+    setCreateError(null);
+  };
+
+  if (!hasEnteredWorkspace) {
+    return (
+      <StartAuditView
+        projects={projects}
+        onStart={handleCreateAudit}
+        onOpenDemo={handleOpenDemo}
+        onOpenExisting={handleSelectProject}
+        isSubmitting={isCreatingAudit}
+        error={createError}
+      />
+    );
+  }
 
   const handlePauseCrawl = async () => {
     if (!currentProject) return;
@@ -209,7 +250,7 @@ export function App() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans antialiased selection:bg-blue-100 selection:text-blue-900">
       {/* Top Scope Limitation Notice (Mandatory) */}
-      <LimitationBanner />
+      <LimitationBanner project={currentProject} />
 
       {/* Main Header */}
       <Header
@@ -223,6 +264,7 @@ export function App() {
         onStopCrawl={handleStopCrawl}
         onRefresh={() => currentProject && loadAuditData(currentProject.id)}
         isRefreshing={isRefreshing}
+        onBackToStart={() => setHasEnteredWorkspace(false)}
       />
 
       {/* Main Layout Area */}
@@ -238,8 +280,8 @@ export function App() {
             (stats?.sitemapBrokenCount || 0)
           }
           criticalIssuesCount={stats?.criticalIssuesCount || 0}
-          duplicateCount={duplicateUrls.length || stats?.duplicateAcrossSitemapsCount || 13}
-          orphanCount={stats?.orphanInSitemapCount || 8}
+          duplicateCount={duplicateUrls.length || stats?.duplicateAcrossSitemapsCount || 0}
+          orphanCount={stats?.orphanInSitemapCount || 0}
         />
 
         {/* Content View Container */}
@@ -399,6 +441,7 @@ export function App() {
         isOpen={isNewAuditModalOpen}
         onClose={() => setIsNewAuditModalOpen(false)}
         onSubmit={handleCreateAudit}
+        onLoadDemo={handleOpenDemo}
       />
     </div>
   );

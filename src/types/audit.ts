@@ -46,6 +46,15 @@ export type IssueType =
   | 'invalid_sitemap_xml'
   | 'sitemap_exceeds_limit';
 
+export type TechnicalEligibility = 'eligible' | 'ineligible' | 'review' | 'unchecked';
+export type EvidenceConfidence = 'high' | 'medium' | 'low';
+
+export interface AuditEvidence {
+  check: string;
+  value: string | number | boolean;
+  source: 'http_response' | 'html' | 'robots_txt' | 'sitemap' | 'rule_engine' | 'sample_data';
+}
+
 export interface CrawlConfig {
   maxUrls: number;
   crawlDepth: number; // 0 = unlimited within host
@@ -58,6 +67,7 @@ export interface CrawlConfig {
   excludeFileExtensions: string[];
   customSitemapUrls: string[];
   retryCount: number;
+  concurrency?: number;
 }
 
 export interface SitemapFileRecord {
@@ -112,6 +122,10 @@ export interface CrawledUrlRecord {
   missingReason?: string;
   suggestedSitemap?: string;
   priority: IssueSeverity;
+  technicalEligibility?: TechnicalEligibility;
+  eligibilityReason?: string;
+  evidence?: AuditEvidence[];
+  evidenceConfidence?: EvidenceConfidence;
 }
 
 export interface PageTypeRule {
@@ -194,6 +208,10 @@ export interface IssueItem {
   details?: Record<string, any>;
   suggestedAction: string;
   pageType?: string;
+  ruleId?: string;
+  evidence?: AuditEvidence[];
+  confidence?: EvidenceConfidence;
+  observedAt?: string;
 }
 
 export interface CriticalPageItem {
@@ -286,6 +304,12 @@ export interface AuditProject {
   createdAt: string;
   updatedAt: string;
   isDemo: boolean;
+  dataProvenance?: {
+    sourceLabel: string;
+    scope: 'illustrative_sample' | 'live_crawl' | 'imported_evidence';
+    recordsComplete: boolean;
+    note: string;
+  };
   status: AuditStatus;
   crawlConfig: CrawlConfig;
   stats: AuditSummaryStats;

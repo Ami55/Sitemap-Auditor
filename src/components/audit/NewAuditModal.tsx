@@ -22,13 +22,15 @@ interface NewAuditModalProps {
     additionalSitemaps?: string[];
     config: Partial<CrawlConfig>;
     isDemo?: boolean;
-  }) => void;
+  }) => void | Promise<boolean>;
+  onLoadDemo?: () => void;
 }
 
 export const NewAuditModal: React.FC<NewAuditModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
+  onLoadDemo,
 }) => {
   const [activePreset, setActivePreset] = useState<'live' | 'demo'>('live');
   const [name, setName] = useState('');
@@ -52,12 +54,7 @@ export const NewAuditModal: React.FC<NewAuditModalProps> = ({
     setError(null);
 
     if (activePreset === 'demo') {
-      onSubmit({
-        name: 'Globetrotter Expeditions (Large Website Demo)',
-        homepageUrl: 'https://www.globetrotter-expeditions.com',
-        config: {},
-        isDemo: true,
-      });
+      onLoadDemo?.();
       onClose();
       return;
     }

@@ -172,6 +172,11 @@ export const SitemapProblemsView: React.FC<SitemapProblemsViewProps> = ({
                       {issue.pageType}
                     </span>
                   )}
+                  {issue.ruleId && (
+                    <span className="px-2 py-0.5 bg-violet-50 text-violet-700 rounded text-[10px] font-mono border border-violet-200">
+                      {issue.ruleId} • {issue.confidence || 'unknown'} confidence
+                    </span>
+                  )}
                 </div>
 
                 <div className="text-xs text-slate-600 font-mono break-all flex items-center gap-1.5">
@@ -198,6 +203,15 @@ export const SitemapProblemsView: React.FC<SitemapProblemsViewProps> = ({
                   <strong className="text-slate-900">Recommended Action: </strong>
                   <span>{issue.suggestedAction}</span>
                 </div>
+                {issue.evidence && issue.evidence.length > 0 && (
+                  <div className="text-[10px] text-slate-600 flex flex-wrap gap-1.5">
+                    {issue.evidence.map((item, index) => (
+                      <span key={`${item.check}-${index}`} className="px-2 py-1 bg-blue-50 border border-blue-100 rounded font-mono">
+                        {item.check}={String(item.value)}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Action Button */}

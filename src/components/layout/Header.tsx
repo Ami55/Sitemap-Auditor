@@ -12,6 +12,7 @@ import {
   AlertCircle,
   Loader2,
   HelpCircle,
+  Home,
 } from 'lucide-react';
 import { AuditProject } from '../../types/audit.js';
 
@@ -26,6 +27,7 @@ interface HeaderProps {
   onStopCrawl: () => void;
   onRefresh: () => void;
   isRefreshing: boolean;
+  onBackToStart?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -39,6 +41,7 @@ export const Header: React.FC<HeaderProps> = ({
   onStopCrawl,
   onRefresh,
   isRefreshing,
+  onBackToStart,
 }) => {
   const isCrawling = currentProject?.status === 'crawling' || currentProject?.status === 'discovering_sitemaps';
   const isPaused = currentProject?.status === 'paused';
@@ -65,7 +68,7 @@ export const Header: React.FC<HeaderProps> = ({
                   id="badge-demo-data"
                   className="px-2 py-0.5 text-[11px] font-semibold bg-amber-100 text-amber-800 border border-amber-300 rounded-full"
                 >
-                  Demo Scale
+                Illustrative Demo
                 </span>
               )}
               {currentProject && !currentProject.isDemo && (
@@ -85,7 +88,7 @@ export const Header: React.FC<HeaderProps> = ({
               >
                 {projects.map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.name} {p.isDemo ? '(Sample 240k Scale)' : `(${p.domain})`}
+                    {p.name} {p.isDemo ? '(Sample Data)' : `(${p.domain})`}
                   </option>
                 ))}
               </select>
@@ -98,6 +101,11 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Action Controls */}
         <div className="flex items-center gap-2.5">
+          {onBackToStart && (
+            <button onClick={onBackToStart} title="Back to audit start" className="p-2 text-slate-600 hover:text-blue-700 hover:bg-blue-50 border border-slate-200 rounded-lg">
+              <Home className="w-4 h-4" />
+            </button>
+          )}
           {/* Crawl Status & Controls */}
           {isCrawling && (
             <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-lg text-xs font-medium text-blue-900">
@@ -191,4 +199,3 @@ export const Header: React.FC<HeaderProps> = ({
     </header>
   );
 };
-
