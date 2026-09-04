@@ -14,4 +14,9 @@ test('human issue review decisions persist in the audit session', () => {
   assert.equal(updated?.reviewNote, 'Verified against the page response');
   assert.ok(updated?.reviewedAt);
   assert.equal(store.getAudit(session.project.id)?.issues[0].reviewStatus, 'confirmed');
+
+  const csv = store.exportCsv(session.project.id, 'reviewed');
+  assert.match(csv, /Review Status/);
+  assert.match(csv, /confirmed/);
+  assert.match(csv, /Verified against the page response/);
 });

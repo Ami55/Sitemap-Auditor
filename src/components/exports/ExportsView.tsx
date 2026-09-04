@@ -11,20 +11,28 @@ import {
   CheckCircle2,
   Link2Off,
 } from 'lucide-react';
-import { AuditSummaryStats } from '../../types/audit.js';
+import { AuditSummaryStats, IssueItem } from '../../types/audit.js';
 
 interface ExportsViewProps {
   auditId: string;
   domain: string;
   stats: AuditSummaryStats;
+  issues: IssueItem[];
 }
 
 export const ExportsView: React.FC<ExportsViewProps> = ({
   auditId,
   domain,
   stats,
+  issues,
 }) => {
   const exportCards = [
+    {
+      id: 'pdf', title: 'Executive Report PDF', description: 'Open a polished, print-ready management summary with scope notes, KPIs and priority findings.', count: 'A4 Report', filename: `${domain}-executive-audit.pdf`, endpoint: `/api/audits/${auditId}/report/executive`, icon: FileText, color: 'text-purple-600 bg-purple-50 border-purple-200', openInNewTab: true,
+    },
+    {
+      id: 'reviewed', title: 'Human-Reviewed Findings CSV', description: 'Export only findings classified by a reviewer as confirmed, false positive, needs review, intentional or fixed.', count: `${issues.filter((issue) => issue.reviewStatus && issue.reviewStatus !== 'unreviewed').length} Reviewed`, filename: `${domain}-reviewed-findings.csv`, endpoint: `/api/audits/${auditId}/export/reviewed`, icon: CheckCircle2, color: 'text-emerald-600 bg-emerald-50 border-emerald-200',
+    },
     {
       id: 'duplicates',
       title: 'Cross-Sitemap Duplicate URLs CSV',
@@ -144,11 +152,13 @@ export const ExportsView: React.FC<ExportsViewProps> = ({
                 </span>
                 <a
                   href={card.endpoint}
-                  download={card.filename}
+                  download={card.openInNewTab ? undefined : card.filename}
+                  target={card.openInNewTab ? '_blank' : undefined}
+                  rel={card.openInNewTab ? 'noreferrer' : undefined}
                   className="flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer"
                 >
                   <Download className="w-3.5 h-3.5" />
-                  <span>Download</span>
+                  <span>{card.openInNewTab ? 'Open report' : 'Download'}</span>
                 </a>
               </div>
             </div>

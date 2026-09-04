@@ -411,6 +411,7 @@ export function App() {
                     auditId={currentProject.id}
                     domain={currentProject.domain}
                     stats={stats}
+                    issues={issues}
                   />
                 )}
 

@@ -598,7 +598,7 @@ export class AuditStore {
   /**
    * Export CSV for various report types
    */
-  exportCsv(auditId: string, type: 'missing' | 'all' | 'problems' | 'pagetypes' | 'duplicates' | 'orphans'): string {
+  exportCsv(auditId: string, type: 'missing' | 'all' | 'problems' | 'reviewed' | 'pagetypes' | 'duplicates' | 'orphans'): string {
     const session = this.audits.get(auditId);
     if (!session) return '';
 
@@ -649,7 +649,7 @@ export class AuditStore {
     }
 
     if (type === 'problems') {
-      const headers = ['Issue ID', 'Severity', 'Type', 'Title', 'Affected URL', 'Affected Sitemap', 'Suggested Action'];
+      const headers = ['Issue ID', 'Severity', 'Type', 'Title', 'Affected URL', 'Affected Sitemap', 'Confidence', 'Rule ID', 'Review Status', 'Suggested Action'];
       const rows = session.issues.map((i) => [
         `"${i.id}"`,
         `"${i.severity}"`,
@@ -657,9 +657,23 @@ export class AuditStore {
         `"${i.title.replace(/"/g, '""')}"`,
         `"${i.affectedUrl}"`,
         `"${i.affectedSitemap || ''}"`,
+        `"${i.confidence || ''}"`,
+        `"${i.ruleId || ''}"`,
+        `"${i.reviewStatus || 'unreviewed'}"`,
         `"${i.suggestedAction.replace(/"/g, '""')}"`,
       ]);
       return [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    }
+
+    if (type === 'reviewed') {
+      const reviewed = session.issues.filter((issue) => issue.reviewStatus && issue.reviewStatus !== 'unreviewed');
+      const headers = ['Issue ID', 'Review Status', 'Reviewed At', 'Severity', 'Title', 'Affected URL', 'Confidence', 'Rule ID', 'Review Note', 'Suggested Action'];
+      const rows = reviewed.map((issue) => [
+        `"${issue.id}"`, `"${issue.reviewStatus}"`, `"${issue.reviewedAt || ''}"`, `"${issue.severity}"`,
+        `"${issue.title.replace(/"/g, '""')}"`, `"${issue.affectedUrl}"`, `"${issue.confidence || ''}"`, `"${issue.ruleId || ''}"`,
+        `"${(issue.reviewNote || '').replace(/"/g, '""')}"`, `"${issue.suggestedAction.replace(/"/g, '""')}"`,
+      ]);
+      return [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
     }
 
     if (type === 'pagetypes') {
