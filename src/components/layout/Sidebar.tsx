@@ -155,7 +155,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     >
       <div className="p-4 border-b border-slate-800">
         <div className="text-xs uppercase tracking-wider text-blue-400 font-bold mb-0.5">
-          SemanticMapper Engine
+          Sitemap Audit Engine
         </div>
         <div className="text-xs text-slate-400">
           Deterministic Link & Sitemap Auditor

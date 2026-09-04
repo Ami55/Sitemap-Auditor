@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { LimitationBanner } from './components/common/LimitationBanner.js';
 import { Header } from './components/layout/Header.js';
 import { Sidebar, NavTab } from './components/layout/Sidebar.js';
 import { NewAuditModal } from './components/audit/NewAuditModal.js';
@@ -249,9 +248,6 @@ export function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans antialiased selection:bg-blue-100 selection:text-blue-900">
-      {/* Top Scope Limitation Notice (Mandatory) */}
-      <LimitationBanner project={currentProject} />
-
       {/* Main Header */}
       <Header
         currentProject={currentProject}

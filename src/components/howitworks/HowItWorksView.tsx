@@ -33,13 +33,13 @@ export const HowItWorksView: React.FC<HowItWorksViewProps> = ({ onNavigateToTab 
         <div className="max-w-4xl">
           <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-semibold border border-blue-500/30 mb-3">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>SemanticMapper Architecture Guide</span>
+            <span>Sitemap Auditor Architecture Guide</span>
           </div>
           <h2 className="text-2xl font-bold tracking-tight text-white">
-            How SemanticMapper Audits & Classifies URLs
+            How the Sitemap Auditor Classifies URLs
           </h2>
           <p className="text-sm text-slate-300 mt-2 leading-relaxed">
-            SemanticMapper conducts deterministic comparison between internally crawled URLs, XML sitemap declarations, and a 11-priority hierarchical URL taxonomy engine to discover coverage gaps, nested indexing bugs, and orphan sitemap files at enterprise scale.
+            The Sitemap Auditor conducts deterministic comparison between internally crawled URLs, XML sitemap declarations, and an 11-priority hierarchical URL taxonomy engine to discover coverage gaps, nested indexing bugs, and orphan sitemap files at enterprise scale.
           </p>
 
           <div className="flex flex-wrap items-center gap-2.5 mt-5">
@@ -174,7 +174,7 @@ export const HowItWorksView: React.FC<HowItWorksViewProps> = ({ onNavigateToTab 
               <span>Hierarchical 11-Rule Priority Order</span>
             </h3>
             <p className="text-xs text-slate-600 mb-4">
-              When classifying any URL or slug, SemanticMapper checks rules in strict ascending order (Priority 1 through 11). The first condition satisfied halts further evaluation:
+              When classifying any URL or slug, the Sitemap Auditor checks rules in strict ascending order (Priority 1 through 11). The first condition satisfied halts further evaluation:
             </p>
 
             <div className="overflow-x-auto">
@@ -268,7 +268,7 @@ export const HowItWorksView: React.FC<HowItWorksViewProps> = ({ onNavigateToTab 
             <span>Automated Developer Ticket Generation</span>
           </h3>
           <p className="text-xs text-slate-600">
-            For every discovered architectural fault, SemanticMapper compiles engineer-ready tickets formatted with problem statements, affected URL count, exact slug examples, XML schema requirements, and verification steps.
+            For every discovered architectural fault, the Sitemap Auditor compiles engineer-ready tickets formatted with problem statements, affected URL count, exact slug examples, XML schema requirements, and verification steps.
           </p>
 
           <div className="p-4 bg-slate-900 text-slate-200 rounded-lg font-mono text-xs space-y-2 border border-slate-800">

@@ -13,6 +13,7 @@ import {
   Loader2,
   HelpCircle,
   Home,
+  Info,
 } from 'lucide-react';
 import { AuditProject } from '../../types/audit.js';
 
@@ -60,9 +61,9 @@ export const Header: React.FC<HeaderProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-base font-semibold text-slate-900 leading-none">
-                SemanticMapper
+                SEO Girl Sitemap Auditor
               </h1>
-              <span className="text-xs text-blue-600 font-medium hidden sm:inline">Enterprise Sitemap Auditor</span>
+              <span className="text-xs text-blue-600 font-medium hidden sm:inline">Technical Coverage Audit</span>
               {currentProject?.isDemo && (
                 <span
                   id="badge-demo-data"
@@ -88,12 +89,13 @@ export const Header: React.FC<HeaderProps> = ({
               >
                 {projects.map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.name} {p.isDemo ? '(Sample Data)' : `(${p.domain})`}
+                    {p.isDemo ? 'Illustrative demo' : p.domain}
                   </option>
                 ))}
               </select>
-              <span className="text-xs text-slate-500 font-mono">
-                {currentProject?.domain}
+              <span className="hidden xl:flex items-center gap-1.5 text-[11px] text-slate-300">
+                <Info className="w-3.5 h-3.5 text-[#b3a8ff]" />
+                {currentProject?.isDemo ? 'Sample data — not a live crawl' : 'Coverage signals do not prove Google indexation'}
               </span>
             </div>
           </div>

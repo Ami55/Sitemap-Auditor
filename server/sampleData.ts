@@ -82,7 +82,7 @@ export function createDemoAuditDataset(): {
     errors: [
       'GSC Error: "Nested indexing — This Sitemap Index is referenced by another Sitemap Index."',
       '0 discovered pages as a direct result of protocol violation',
-      'Referenced by http://www.toursbylocals.com/sitemap_index.xml and https://www.toursbylocals.com/sitemap_index.xml',
+      'Referenced by both http://www.example.com/sitemap_index.xml and https://www.example.com/sitemap_index.xml',
     ],
     warnings: ['Conflicting working legacy counterpart exists: /pillar_sitemap.xml (4 pages, Success)'],
     processingDate: '2026-08-17T14:30:00Z',
@@ -639,7 +639,7 @@ export function createDemoAuditDataset(): {
     isRobotsBlocked: false,
     canonicalUrl: `${homepageUrl}/`,
     canonicalStatus: 'self_referencing',
-    pageTitle: 'ToursByLocals | Private Tours & Local Tour Guides Worldwide',
+    pageTitle: 'Example Travel | Private Tours & Local Guides',
     h1: 'Explore the World with Passionate Local Guides',
     crawlDepth: 0,
     inboundInternalLinksCount: 184,
@@ -659,10 +659,10 @@ export function createDemoAuditDataset(): {
 
   // [P0 FINDING]: Pillar pages in erroring /sitemaps/pillar-pages.xml
   const pillarPages = [
-    { slug: 'rome-private-tour-guides', title: 'Rome Private Tour Guides | ToursByLocals', h1: 'Licensed Private Tour Guides in Rome' },
-    { slug: 'paris-private-tour-guides', title: 'Paris Private Tour Guides | ToursByLocals', h1: 'Private Tour Guides in Paris, France' },
-    { slug: 'tokyo-private-tour-guides', title: 'Tokyo Private Tour Guides | ToursByLocals', h1: 'Local Private Tour Guides in Tokyo' },
-    { slug: 'florence-private-tour-guides', title: 'Florence Private Tour Guides | ToursByLocals', h1: 'Private Guided Tours in Florence' },
+    { slug: 'rome-private-tour-guides', title: 'Rome Private Tour Guides | Example Travel', h1: 'Licensed Private Tour Guides in Rome' },
+    { slug: 'paris-private-tour-guides', title: 'Paris Private Tour Guides | Example Travel', h1: 'Private Tour Guides in Paris, France' },
+    { slug: 'tokyo-private-tour-guides', title: 'Tokyo Private Tour Guides | Example Travel', h1: 'Local Private Tour Guides in Tokyo' },
+    { slug: 'florence-private-tour-guides', title: 'Florence Private Tour Guides | Example Travel', h1: 'Private Guided Tours in Florence' },
   ];
   pillarPages.forEach((p, idx) => {
     const url = `${homepageUrl}/${p.slug}`;
@@ -721,7 +721,7 @@ export function createDemoAuditDataset(): {
       isRobotsBlocked: false,
       canonicalUrl: url,
       canonicalStatus: 'self_referencing',
-      pageTitle: `${area.title} | ToursByLocals`,
+      pageTitle: `${area.title} | Example Travel`,
       h1: area.h1,
       crawlDepth: 2,
       inboundInternalLinksCount: 38 - idx * 3,
@@ -763,7 +763,7 @@ export function createDemoAuditDataset(): {
       isRobotsBlocked: false,
       canonicalUrl: url,
       canonicalStatus: 'self_referencing',
-      pageTitle: `${tour.title} | ToursByLocals`,
+      pageTitle: `${tour.title} | Example Travel`,
       h1: tour.title,
       crawlDepth: 2,
       inboundInternalLinksCount: 42 - idx * 4,
@@ -806,7 +806,7 @@ export function createDemoAuditDataset(): {
       isRobotsBlocked: false,
       canonicalUrl: url,
       canonicalStatus: 'self_referencing',
-      pageTitle: `${dest.title} | ToursByLocals`,
+      pageTitle: `${dest.title} | Example Travel`,
       h1: `${dest.title} with Top Rated Local Guides`,
       crawlDepth: 1,
       inboundInternalLinksCount: 110 - idx * 6,
@@ -847,7 +847,7 @@ export function createDemoAuditDataset(): {
       isRobotsBlocked: false,
       canonicalUrl: url,
       canonicalStatus: 'self_referencing',
-      pageTitle: `${tour.title} | ToursByLocals`,
+      pageTitle: `${tour.title} | Example Travel`,
       h1: tour.title,
       crawlDepth: 2,
       inboundInternalLinksCount: 52 - idx * 4,
@@ -889,7 +889,7 @@ export function createDemoAuditDataset(): {
       isRobotsBlocked: false,
       canonicalUrl: url,
       canonicalStatus: 'self_referencing',
-      pageTitle: `${g.name} - ${g.city} Tour Guide | ToursByLocals`,
+      pageTitle: `${g.name} - ${g.city} Tour Guide | Example Travel`,
       h1: `Meet ${g.name} - Verified Local Guide`,
       crawlDepth: 2,
       inboundInternalLinksCount: 36 - idx * 2,
@@ -928,7 +928,7 @@ export function createDemoAuditDataset(): {
       isRobotsBlocked: false,
       canonicalUrl: url,
       canonicalStatus: 'self_referencing',
-      pageTitle: `${b.title} | ToursByLocals Blog`,
+      pageTitle: `${b.title} | Example Travel Blog`,
       h1: b.title,
       crawlDepth: 2,
       inboundInternalLinksCount: 22 - idx * 2,
@@ -968,7 +968,7 @@ export function createDemoAuditDataset(): {
       isRobotsBlocked: false,
       canonicalUrl: url,
       canonicalStatus: 'self_referencing',
-      pageTitle: `${sp.title} | ToursByLocals`,
+      pageTitle: `${sp.title} | Example Travel`,
       h1: sp.title,
       crawlDepth: 1,
       inboundInternalLinksCount: 95 - idx * 5,
@@ -1088,7 +1088,7 @@ export function createDemoAuditDataset(): {
       isRobotsBlocked: false,
       canonicalUrl: url,
       canonicalStatus: 'self_referencing',
-      pageTitle: `${orp.title} | ToursByLocals`,
+      pageTitle: `${orp.title} | Example Travel`,
       h1: orp.title,
       crawlDepth: orp.inboundLinks === 0 ? 0 : 4,
       inboundInternalLinksCount: orp.inboundLinks,
@@ -1112,7 +1112,7 @@ export function createDemoAuditDataset(): {
   const criticalPages: CriticalPageItem[] = [
     {
       id: 'crit-home',
-      name: 'Homepage Root (https://www.toursbylocals.com/)',
+      name: 'Homepage Root (https://www.example.com/)',
       url: `${homepageUrl}/`,
       expectedSitemap: 'sitemap_pages.xml',
       priority: 'critical',
@@ -1316,7 +1316,7 @@ export function createDemoAuditDataset(): {
       type: 'missing_critical_page',
       severity: 'critical',
       title: 'P0 Omission: Root Homepage (/) omitted from all XML sitemaps',
-      description: 'The root homepage (https://www.toursbylocals.com/) is live and crawlable with 184 inbound internal links and 200 OK status, but is absent from all XML sitemaps in sitemap_index.xml.',
+      description: 'The root homepage (https://www.example.com/) is live and crawlable with 184 inbound internal links and 200 OK status, but is absent from all XML sitemaps in sitemap_index.xml.',
       affectedUrl: `${homepageUrl}/`,
       affectedSitemap: 'sitemap_pages.xml',
       suggestedAction: 'Add the root homepage URL to the main pages sitemap with priority 1.0.',
@@ -1493,7 +1493,7 @@ export function createDemoAuditDataset(): {
       notDiscoveredThroughCrawlCount: 0,
       expectedSitemap: 'sitemap_pages.xml',
       severity: 'critical',
-      recommendedAction: 'Add root homepage https://www.toursbylocals.com/ to primary pages sitemap with priority 1.0.',
+      recommendedAction: 'Add root homepage https://www.example.com/ to primary pages sitemap with priority 1.0.',
     },
     {
       pageType: 'Static & Informational Pages',
@@ -1517,7 +1517,7 @@ export function createDemoAuditDataset(): {
   // 7. DEVELOPER TICKETS & RECOMMENDATIONS
   // ==========================================
   const recommendation: AuditRecommendation = {
-    summary: 'ToursByLocals sitemap architecture exhibits 3 distinct overlapping generations: active /sitemaps/ directory, legacy root-level /tours_sitemap_1–10.xml (Feb 2025), and parallel search_results_* families. Immediate remediation is required for P0 nested indexing errors and P1 missing child sitemap references in /sitemaps/areas.xml and /sitemaps/tours.xml.',
+    summary: 'The illustrative sitemap architecture exhibits 3 distinct overlapping generations: active /sitemaps/ directory, legacy root-level /tours_sitemap_1–10.xml, and parallel search_results_* families. Immediate remediation is required for P0 nested indexing errors and P1 missing child sitemap references.',
     importantFindings: [
       {
         title: 'P0: Nested Indexing Error on /sitemaps/pillar-pages.xml & static-pages.xml',
@@ -1598,7 +1598,7 @@ export function createDemoAuditDataset(): {
       {
         priority: 3,
         action: 'Add Root Homepage to Sitemaps',
-        scope: 'https://www.toursbylocals.com/ -> sitemap_pages.xml',
+        scope: 'https://www.example.com/ -> sitemap_pages.xml',
         impactDescription: 'Ensure the top equity page is explicitly present in sitemaps.',
       },
       {
@@ -1633,7 +1633,7 @@ export function createDemoAuditDataset(): {
         'GSC resubmission processes without errors and reports >0 discovered URLs.',
       ],
       qaSteps: [
-        '1. Fetch https://www.toursbylocals.com/sitemaps/pillar-pages.xml using curl.',
+        '1. Fetch https://www.example.com/sitemaps/pillar-pages.xml using curl.',
         '2. Verify root element is <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">.',
         '3. Validate in Google Search Console URL Inspection.',
       ],
@@ -1703,7 +1703,7 @@ export function createDemoAuditDataset(): {
       recommendedInvestigation: 'Perform a diff check to verify 100% overlap, then delete legacy files or configure 301 redirects to /sitemaps/ equivalents.',
       acceptanceCriteria: [
         'Legacy sitemaps removed from GSC.',
-        'Only https://www.toursbylocals.com/sitemap_index.xml is declared in robots.txt.',
+        'Only https://www.example.com/sitemap_index.xml is declared in robots.txt.',
       ],
       qaSteps: [
         '1. Verify legacy files return 410 or 301 to canonical sitemap index.',

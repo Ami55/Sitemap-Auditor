@@ -6,3 +6,12 @@ body{background:radial-gradient(circle at 90% 0,rgba(124,97,255,.12),transparent
 @media(max-width:800px){#app-main-header{margin:10px;border-radius:20px}#app-main-sidebar{margin:10px;border-radius:18px}main{padding:18px!important}}
 /* Purple-dominant surfaces and shared footer */
 .bg-slate-900{background:linear-gradient(135deg,#17193d 0%,#282064 62%,#45136f 100%)!important}.bg-slate-800{background:linear-gradient(135deg,#211b52,#37236f)!important}.bg-blue-50,.bg-indigo-50{background:#f0edff!important}.border-blue-200,.border-indigo-200{border-color:#d8d0ff!important}#app-main-footer{border-color:#d8d0ee!important;background:linear-gradient(145deg,#fff 25%,#f1edff 100%);border-radius:18px;padding:22px!important;box-shadow:0 10px 26px rgba(82,55,255,.08)}#app-main-footer .sg-developer{color:#5237ff!important;font-weight:800}
+
+/* SEO Girl–matched audit onboarding */
+#audit-start-page{background:radial-gradient(circle at 86% 4%,rgba(124,97,255,.10),transparent 24%),#f7f8fc}
+#audit-start-page main{padding-top:8px!important}
+#audit-start-hero{background:radial-gradient(circle at 82% 15%,rgba(105,43,183,.62),transparent 35%),linear-gradient(125deg,#0e172b 0%,#171a45 57%,#3d0766 100%);box-shadow:0 28px 65px rgba(28,24,70,.18)}
+#audit-start-form{background:#fff!important;box-shadow:0 28px 60px rgba(9,12,30,.28)!important;border-radius:26px!important}
+#audit-start-form input,#audit-start-form select{background:#fff;color:#151b2c}
+#audit-start-form .bg-white{background:#fff!important}
+@media(max-width:800px){#audit-start-page main{padding:4px 12px 32px!important}#audit-start-hero{border-radius:26px;padding:24px}#audit-start-form{border-radius:20px!important}}
