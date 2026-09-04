@@ -13,8 +13,10 @@ import {
   Filter,
   Layers,
   FileCode,
+  Eye,
+  X,
 } from 'lucide-react';
-import { IssueItem } from '../../types/audit.js';
+import { IssueItem, IssueReviewStatus } from '../../types/audit.js';
 
 interface SitemapProblemsViewProps {
   auditId: string;
@@ -29,6 +31,24 @@ export const SitemapProblemsView: React.FC<SitemapProblemsViewProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<string>('all');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [selectedIssue, setSelectedIssue] = useState<IssueItem | null>(null);
+  const [reviewOverrides, setReviewOverrides] = useState<Record<string, IssueReviewStatus>>({});
+  const [savingId, setSavingId] = useState<string | null>(null);
+
+  const updateReview = async (issue: IssueItem, reviewStatus: IssueReviewStatus) => {
+    setSavingId(issue.id);
+    try {
+      const response = await fetch(`/api/audits/${auditId}/issues/${issue.id}/review`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reviewStatus }),
+      });
+      if (!response.ok) throw new Error('Could not save review');
+      const updated: IssueItem = await response.json();
+      setReviewOverrides((current) => ({ ...current, [issue.id]: updated.reviewStatus || 'unreviewed' }));
+      setSelectedIssue((current) => current?.id === issue.id ? { ...current, ...updated } : current);
+    } finally {
+      setSavingId(null);
+    }
+  };
 
   const handleCopy = (id: string, text: string) => {
     navigator.clipboard.writeText(text);
@@ -215,7 +235,24 @@ export const SitemapProblemsView: React.FC<SitemapProblemsViewProps> = ({
               </div>
 
               {/* Action Button */}
-              <div className="shrink-0 flex md:flex-col items-end justify-between gap-2">
+              <div className="shrink-0 flex md:flex-col items-stretch md:items-end justify-between gap-2">
+                <select
+                  aria-label={`Review status for ${issue.title}`}
+                  disabled={savingId === issue.id}
+                  value={reviewOverrides[issue.id] || issue.reviewStatus || 'unreviewed'}
+                  onChange={(event) => updateReview(issue, event.target.value as IssueReviewStatus)}
+                  className="px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-semibold bg-white min-w-40"
+                >
+                  <option value="unreviewed">Unreviewed</option>
+                  <option value="confirmed">Confirmed issue</option>
+                  <option value="false_positive">False positive</option>
+                  <option value="needs_review">Needs review</option>
+                  <option value="intentional_exclusion">Intentional exclusion</option>
+                  <option value="fixed">Fixed</option>
+                </select>
+                <button onClick={() => setSelectedIssue(issue)} className="flex items-center justify-center gap-1.5 px-3 py-1.5 border border-violet-200 bg-violet-50 text-violet-800 rounded-lg text-xs font-semibold">
+                  <Eye className="w-3.5 h-3.5" /> Inspect evidence
+                </button>
                 <button
                   onClick={() =>
                     onGenerateTicket(
@@ -235,6 +272,30 @@ export const SitemapProblemsView: React.FC<SitemapProblemsViewProps> = ({
           ))
         )}
       </div>
+
+      {selectedIssue && (
+        <div className="fixed inset-0 z-50 bg-slate-950/50 backdrop-blur-sm flex justify-end" onClick={() => setSelectedIssue(null)}>
+          <aside className="w-full max-w-xl h-full bg-white shadow-2xl overflow-y-auto" onClick={(event) => event.stopPropagation()}>
+            <div className="sticky top-0 bg-white border-b border-slate-200 p-5 flex items-start justify-between z-10">
+              <div><div className="text-[10px] uppercase tracking-wider font-bold text-violet-700">Evidence record</div><h3 className="font-extrabold text-lg mt-1">{selectedIssue.title}</h3></div>
+              <button onClick={() => setSelectedIssue(null)} className="p-2 rounded-lg hover:bg-slate-100"><X className="w-5 h-5" /></button>
+            </div>
+            <div className="p-5 space-y-5 text-sm">
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4"><div className="text-xs font-bold text-slate-500 uppercase mb-2">Affected URL</div><div className="font-mono text-xs break-all text-slate-900">{selectedIssue.affectedUrl}</div></div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="border border-slate-200 rounded-xl p-3"><div className="text-[10px] uppercase font-bold text-slate-500">Confidence</div><div className="font-bold capitalize mt-1">{selectedIssue.confidence || 'Unknown'}</div></div>
+                <div className="border border-slate-200 rounded-xl p-3"><div className="text-[10px] uppercase font-bold text-slate-500">Rule</div><div className="font-mono font-bold mt-1">{selectedIssue.ruleId || 'Legacy rule'}</div></div>
+                <div className="border border-slate-200 rounded-xl p-3"><div className="text-[10px] uppercase font-bold text-slate-500">Observed</div><div className="font-bold mt-1">{selectedIssue.observedAt ? new Date(selectedIssue.observedAt).toLocaleString() : 'Not recorded'}</div></div>
+                <div className="border border-slate-200 rounded-xl p-3"><div className="text-[10px] uppercase font-bold text-slate-500">Sitemap</div><div className="font-mono text-xs break-all mt-1">{selectedIssue.affectedSitemap || 'Not applicable'}</div></div>
+              </div>
+              <div><h4 className="font-bold mb-2">Why it was flagged</h4><p className="text-slate-600 leading-relaxed">{selectedIssue.description}</p></div>
+              <div><h4 className="font-bold mb-2">Collected evidence</h4>{selectedIssue.evidence?.length ? <div className="space-y-2">{selectedIssue.evidence.map((item, index) => <div key={`${item.check}-${index}`} className="grid grid-cols-[1fr_auto] gap-4 border border-slate-200 rounded-xl p-3"><div><div className="font-semibold">{item.check}</div><div className="text-[10px] text-slate-500 mt-0.5">Source: {item.source.replaceAll('_', ' ')}</div></div><code className="text-xs bg-slate-100 rounded px-2 py-1 self-center max-w-52 break-all">{String(item.value)}</code></div>)}</div> : <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-xl p-3">This legacy finding has no structured evidence record. Verify it manually before actioning.</p>}</div>
+              <div className="bg-violet-50 border border-violet-200 rounded-xl p-4"><h4 className="font-bold text-violet-950">Recommended action</h4><p className="text-sm text-violet-900 mt-1">{selectedIssue.suggestedAction}</p></div>
+              <label className="block"><span className="font-bold block mb-2">Human review status</span><select value={reviewOverrides[selectedIssue.id] || selectedIssue.reviewStatus || 'unreviewed'} onChange={(event) => updateReview(selectedIssue, event.target.value as IssueReviewStatus)} className="w-full border border-slate-300 rounded-xl px-3 py-2.5"><option value="unreviewed">Unreviewed</option><option value="confirmed">Confirmed issue</option><option value="false_positive">False positive</option><option value="needs_review">Needs review</option><option value="intentional_exclusion">Intentional exclusion</option><option value="fixed">Fixed</option></select></label>
+            </div>
+          </aside>
+        </div>
+      )}
     </div>
   );
 };

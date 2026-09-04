@@ -204,6 +204,15 @@ app.get('/api/audits/:id/problems', (req, res) => {
   }
 });
 
+app.patch('/api/audits/:id/issues/:issueId/review', (req, res) => {
+  const allowed = new Set(['unreviewed', 'confirmed', 'false_positive', 'needs_review', 'intentional_exclusion', 'fixed']);
+  const reviewStatus = String(req.body?.reviewStatus || '');
+  if (!allowed.has(reviewStatus)) return res.status(400).json({ error: 'Invalid review status' });
+  const issue = auditStore.updateIssueReview(req.params.id, req.params.issueId, reviewStatus as any, req.body?.reviewNote);
+  if (!issue) return res.status(404).json({ error: 'Audit or issue not found' });
+  res.json(issue);
+});
+
 // Get page-type coverage matrix
 app.get('/api/audits/:id/page-types', (req, res) => {
   try {

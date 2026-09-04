@@ -62,6 +62,16 @@ export class AuditStore {
     return this.audits.get(auditId);
   }
 
+  updateIssueReview(auditId: string, issueId: string, reviewStatus: IssueItem['reviewStatus'], reviewNote?: string): IssueItem | undefined {
+    const session = this.audits.get(auditId);
+    const issue = session?.issues.find((item) => item.id === issueId);
+    if (!issue) return undefined;
+    issue.reviewStatus = reviewStatus || 'unreviewed';
+    issue.reviewNote = reviewNote?.trim() || undefined;
+    issue.reviewedAt = issue.reviewStatus === 'unreviewed' ? undefined : new Date().toISOString();
+    return issue;
+  }
+
   /**
    * Create and launch a new live or demo audit
    */

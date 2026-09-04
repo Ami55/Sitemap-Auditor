@@ -34,6 +34,7 @@ import {
   PieChart,
   Pie,
 } from 'recharts';
+import { AuditValidationPanel } from './AuditValidationPanel.js';
 
 interface DashboardViewProps {
   project: AuditProject;
@@ -136,6 +137,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
         <span className="text-[11px]">{project.dataProvenance?.note}</span>
       </div>
+
+      <AuditValidationPanel project={project} stats={stats} />
 
       {/* Main KPI Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

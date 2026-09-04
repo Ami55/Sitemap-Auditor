@@ -48,6 +48,7 @@ export type IssueType =
 
 export type TechnicalEligibility = 'eligible' | 'ineligible' | 'review' | 'unchecked';
 export type EvidenceConfidence = 'high' | 'medium' | 'low';
+export type IssueReviewStatus = 'unreviewed' | 'confirmed' | 'false_positive' | 'needs_review' | 'intentional_exclusion' | 'fixed';
 
 export interface AuditEvidence {
   check: string;
@@ -212,6 +213,9 @@ export interface IssueItem {
   evidence?: AuditEvidence[];
   confidence?: EvidenceConfidence;
   observedAt?: string;
+  reviewStatus?: IssueReviewStatus;
+  reviewNote?: string;
+  reviewedAt?: string;
 }
 
 export interface CriticalPageItem {
