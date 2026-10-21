@@ -427,7 +427,7 @@ export function App() {
           >
             <div className="flex flex-col sm:flex-row items-center justify-between gap-2 max-w-7xl mx-auto px-2">
               <p className="font-medium text-slate-600">
-                © 2026 Sitemap Auditor. Developed by <strong className="sg-developer">Ami - SEO Girl</strong>. All rights reserved.
+                © 2026 Sitemap Auditor. Developed by <strong className="sg-developer">SEO Girl - Ami</strong>. All rights reserved.
               </p>
               <div className="flex items-center gap-4 text-slate-500 text-[11px]">
                 <span>Deterministic Link Graph Analysis</span>
