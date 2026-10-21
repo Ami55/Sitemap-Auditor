@@ -103,7 +103,7 @@ export const StartAuditView: React.FC<Props> = ({ projects, onStart, onOpenDemo,
         </div>
       </main>
 
-      <footer className="border-t border-[#e0e3ec] bg-white/70"><div className="max-w-[1440px] mx-auto px-6 lg:px-12 py-8 text-sm sm:text-base text-[#30415e]">© 2026 Sitemap Auditor. Developed by <a href="https://www.seogirl.ca/" className="font-semibold text-[#553cff] hover:underline">Ami – SEO Girl</a>. All rights reserved.</div></footer>
+      <footer className="border-t border-[#e0e3ec] bg-white/70"><div className="max-w-[1440px] mx-auto px-6 lg:px-12 py-8 text-sm sm:text-base text-[#30415e]">© 2026 Sitemap Auditor. Developed by <a href="https://www.seogirl.ca/" className="font-semibold text-[#553cff] hover:underline"><strong>SEO Girl - Ami</strong></a>. All rights reserved.</div></footer>
     </div>
   );
 };
