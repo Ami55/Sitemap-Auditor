@@ -1,26 +1,42 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
-
-# Run and deploy your AI Studio app
-
-This contains everything you need to run your app locally.
-
-View your app in AI Studio: https://ai.studio/apps/14d3e57e-31eb-4189-ba6d-8a18961a2ed0
-
-## Run Locally
-
-**Prerequisites:**  Node.js
-
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
 # Sitemap Auditor
 
-The application opens on a dedicated audit setup screen. A user must enter a website (and optionally a sitemap URL and crawl settings) before a live dashboard is shown. Illustrative sample data is available through a separate, explicitly labelled demo action and is never presented as a live result.
+Compare sitemap inclusion with crawl observations and technical eligibility, while keeping evidence and uncertainty visible.
+
+Built by [Ami Saeednia](https://www.seogirl.ca), SEO / GEO Strategist.
+
+[Live app](https://seogirl-sitemap-auditor.vercel.app/) · [Research and studies](https://www.seogirl.ca/research) · [All tools](https://www.seogirl.ca/apps)
+
+![Sitemap Auditor interface; landing view and any example data are illustrative](docs/screenshot.png)
+
+## The problem
+
+Compare sitemap inclusion with crawl observations and technical eligibility, while keeping evidence and uncertainty visible.
+
+## Who it is for
+
+Technical SEOs reviewing sitemap coverage and prioritizing URLs for further investigation.
+
+## Workflow and methodology
+
+Start a live audit with a site, optional sitemap and crawl limits, or deliberately open the separate sample demo. Compare parsed sitemap URLs, internal discovery, robots and canonical observations, then inspect evidence and candidate reasons.
+
+## Evidence and limitations
+
+Crawl coverage depends on the configured scope and limits. Not discovered is not proof of no internal links. A sitemap inclusion candidate is a review recommendation, not a guarantee of indexation. Google index status is unknown without appropriate Search Console evidence. Sample results are illustrative.
+
+The screenshot documents the interface, not an independently validated result. This repository is a practical research tool; its outputs require human review.
+
+## Local setup
+
+Run `npm install`, then `npm run dev`. Use `npm run test` for the backend trust tests, `npm run lint` for TypeScript checking, and `npm run build` for bundling. `npm start` runs the production server. Keep any optional model credentials in the server environment, never committed. Use a bounded crawl on sites you are authorized to inspect and review crawl completeness before drawing conclusions.
+
+Review `package.json` for the exact scripts and dependencies. Do not put secrets in frontend code or commit local environment files.
+
+## Background
+
+I build tools to make entity strategy, technical SEO and AI-search research easier to inspect and apply. Explore my [independent studies](https://www.seogirl.ca/research), [workbooks](https://www.seogirl.ca/workbooks) and [project case studies](https://www.seogirl.ca/case-studies).
+
+## Implementation and trust notes
 
 ## Trust baseline (Sprint 1)
 
